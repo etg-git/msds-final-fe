@@ -1,0 +1,22 @@
+/* 화면 전체 스크롤 막고, 루트 높이 100% 고정 */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  overflow: hidden; /* 브라우저 전체 스크롤 제거 */
+}
+
+#app {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* 너 App.vue에서 쓰는 레이아웃 클래스 있지? (예: .app-layout) */
+.app-layout {
+  height: 100%;
+  overflow: hidden;
+}
