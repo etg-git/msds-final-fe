@@ -720,6 +720,7 @@ watch(
   flex-direction: column;
 }
 
+
 .shms-regul-modal :deep(.n-card__content) {
   flex: 1;
   overflow: hidden; /* 안에서 각 카드가 스크롤 */
