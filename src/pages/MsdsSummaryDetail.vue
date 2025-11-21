@@ -5,7 +5,7 @@
       <div class="sections-header">
         <div class="sections-title">섹션별 상세</div>
 
-        <!-- 오른쪽: 저장 버튼 + 이전/다음 내비게이션 -->
+        <!-- 오른쪽: 이전/다음 내비게이션 -->
         <div class="sections-right">
           <div class="sections-nav">
             <n-button
@@ -50,7 +50,7 @@
               <n-card
                 size="small"
                 class="summary-card"
-                title="섹션 1. 화학제품과 회사 정보"
+                title="1. 화학제품과 회사 정보"
               >
                 <n-descriptions
                   :column="6"
@@ -75,7 +75,7 @@
               <n-card
                 size="small"
                 class="summary-card"
-                title="섹션 2. 유해·위험성 요약"
+                title="2. 유해·위험성 요약"
               >
                 <div class="sec2-row">
                   <div class="label">신호어</div>
@@ -156,12 +156,13 @@
               <n-card
                 size="small"
                 class="summary-card"
-                title="섹션 3. 구성성분 정보"
+                title="3. 구성성분 정보"
               >
                 <n-data-table
                   :columns="compositionColumns"
                   :data="detail.composition"
                   :bordered="false"
+                  :max-height="250"
                   size="small"
                 />
               </n-card>
@@ -174,7 +175,7 @@
               <n-card
                 size="small"
                 class="summary-card"
-                title="섹션 9. 물리·화학적 특성"
+                title="9. 물리·화학적 특성"
               >
                 <n-data-table
                   :columns="physicalColumns"
@@ -202,9 +203,9 @@
             <!-- 공통: 섹션 원문 -->
             <n-card size="small" class="section-raw-card" title="섹션 원문">
               <template v-if="sec.exists && sec.content">
-                <n-scrollbar class="section-scroll">
+                <div class="section-scroll">
                   <pre class="section-raw">{{ sec.content }}</pre>
-                </n-scrollbar>
+                </div>
               </template>
               <template v-else>
                 <div class="text-muted">저장된 섹션 원문이 없습니다.</div>
@@ -230,7 +231,6 @@ import {
   NTabs,
   NTabPane,
   NDataTable,
-  NScrollbar,
   NTag,
   NDescriptions,
   NDescriptionsItem,
@@ -289,12 +289,10 @@ const physicalColumns: DataTableColumns<any> = [
   { title: '값', key: 'value' }
 ]
 
-// 섹션1 회사명 (필요시 계속 사용)
 const sec1Company = computed(
   () => detail.value?.sec1_summary?.company_name || ''
 )
 
-// 헤더 메타 (document 우선, 없으면 header_meta fallback)
 const headerMeta = computed(() => {
   const d = detail.value || {}
   const doc = d.document || {}
@@ -325,7 +323,6 @@ const formattedUploadedAt = computed(() => {
   return new Date(detail.value.document.uploaded_at).toLocaleString()
 })
 
-// pictogram 코드 -> 이미지 매핑
 const pictogramImages: Record<string, string> = {
   GHS01: new URL('../assets/image/GHS01.gif', import.meta.url).href,
   GHS02: new URL('../assets/image/GHS02.gif', import.meta.url).href,
@@ -451,6 +448,8 @@ watch(
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI',
     system-ui, -apple-system, sans-serif;
   letter-spacing: -0.01em;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .page-loading {
@@ -460,17 +459,24 @@ watch(
   min-height: 60vh;
 }
 
+/* 메인 카드가 세로 공간을 꽉 채우도록 */
 .sections-card {
   border-radius: 18px;
   margin-top: 4px;
   border: none;
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
   background: #f9fafb;
-  padding-bottom: 10px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .sections-card :deep(.n-card__content) {
   padding: 6px;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .sections-card :deep(.n-card__border) {
@@ -503,12 +509,6 @@ watch(
   gap: 10px;
 }
 
-.save-btn {
-  font-size: 12px;
-  padding: 0 14px;
-  font-family: inherit;
-}
-
 .sections-nav {
   display: flex;
   align-items: center;
@@ -522,10 +522,25 @@ watch(
   text-align: center;
 }
 
-.sections-tabs :deep(.n-tabs-nav) {
-  margin-bottom: 4px;
+/* 탭 전체가 세로 공간을 나눠 갖도록 */
+.sections-tabs {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
+.sections-tabs :deep(.n-tabs-nav) {
+  margin-bottom: 4px;
+  flex: 0 0 auto;
+}
+
+.sections-tabs :deep(.n-tabs-content) {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* 탭 라벨 */
 .sections-tabs :deep(.n-tabs-tab) {
   padding: 6px 10px;
   font-size: 13px;
@@ -543,47 +558,71 @@ watch(
   border-color: #e5e7eb;
 }
 
+/* 탭 안쪽: 위 요약 카드 + 아래 원문 카드 */
 .tab-pane-inner {
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  height: 700px;
-  overflow-y: auto;
-  padding-right: 4px;
+  overflow: hidden; /* 바깥은 고정, 안에서만 스크롤 */
 }
 
-.summary-card,
-.section-raw-card {
-  flex: 0 0 auto;
+/* 요약 카드(섹션 1/2/3/9/기타 안내) 공통 : 고정 높이 + 내부 스크롤 */
+.summary-card {
+  flex: 0 0 230px; /* 요약 영역 고정 높이 */
+  max-height: 300px;
   border-radius: 14px;
   border: none;
   box-shadow: none;
   background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
 }
 
-.summary-card {
-  background: #ffffff;
+.summary-card :deep(.n-card-header) {
+  border-bottom: none;
+  padding: 10px 14px 6px;
 }
 
-.summary-card :deep(.n-card__content),
+.summary-card :deep(.n-card__content) {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 10px 14px;
+  overflow-y: auto; /* 요약 / 구성성분 목록 / 표가 길면 여기서 스크롤 */
+}
+
+/* 섹션 원문 카드도 고정 높이 + 내부 스크롤 */
+.section-raw-card {
+  flex: 0 0 360px; /* 원문 카드 고정 높이 */
+  max-height: 360px;
+  border-radius: 14px;
+  border: none;
+  box-shadow: none;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
+
+.section-raw-card :deep(.n-card-header) {
+  border-bottom: none;
+  padding: 10px 14px 6px;
+}
+
 .section-raw-card :deep(.n-card__content) {
+  flex: 1 1 auto;
+  min-height: 0;
   padding: 10px 14px;
 }
 
-.summary-card :deep(.n-card-header),
-.section-raw-card :deep(.n-card-header) {
-  border-bottom: none;
-  padding-bottom: 6px;
-}
-
-.section-raw-card {
-  min-height: 520px;
-}
-
+/* 원문은 카드 안에서만 스크롤 */
 .section-scroll {
-  max-height: 100%;
+  height: 100%;
+  max-height: none;
+  overflow-y: auto;
 }
 
+/* 섹션2 요약 레이아웃 */
 .sec2-row {
   display: flex;
   align-items: flex-start;
@@ -597,6 +636,7 @@ watch(
   color: #6b7280;
 }
 
+/* 공통 폰트 */
 :deep(.n-descriptions-header),
 :deep(.n-descriptions-item-label),
 :deep(.n-data-table-th),

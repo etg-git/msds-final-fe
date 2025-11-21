@@ -24,12 +24,12 @@
                 <n-input v-model:value="basicForm.vendor_name" placeholder="Please Input" />
               </n-form-item>
 
-              <n-form-item label="Cas No">
-                <n-input v-model:value="basicForm.cas_no" placeholder="Please Input" />
-              </n-form-item>
-
               <n-form-item label="MSDS_NO">
                 <n-input v-model:value="basicForm.msds_no" placeholder="Please Input" />
+              </n-form-item>
+
+              <n-form-item label="CAS No.">
+                <n-input v-model:value="basicForm.cas_no" placeholder="예: 64-17-5" />
               </n-form-item>
 
               <n-form-item label="개정일자">
@@ -64,7 +64,7 @@
               <n-form-item label="GHS 그림문자">
                 <n-input
                   v-model:value="hazardForm.pictograms"
-                  placeholder="쉼표(,)로 구분하여 입력"
+                  placeholder="쉼표(,)로 구분하여 입력 (예: GHS02,GHS07)"
                 />
               </n-form-item>
               <n-form-item label="H 코드">
@@ -82,66 +82,56 @@
             </n-form>
           </n-tab-pane>
 
-          <!-- 탭 3. 구성 성분 (편집 가능한 테이블) -->
+          <!-- 탭 3. 구성 성분 (수정 가능 테이블) -->
           <n-tab-pane name="composition" tab="구성 성분">
-            <div class="composition-toolbar">
-              <n-button size="small" @click="addCompositionRow">
+            <div class="physical-header">
+              <p class="physical-desc">
+                섹션 3(구성 성분)에서 추출된 성분 목록입니다. 성분명, CAS No., 함유량(하한/상한)을 직접 수정하거나 행을 추가·삭제할 수 있습니다.
+              </p>
+              <n-button size="small" tertiary @click="addCompositionRow">
                 행 추가
               </n-button>
             </div>
+
             <n-data-table
               size="small"
               :columns="compositionColumns"
               :data="compositionRows"
+              :max-height="150"
               :bordered="false"
             />
           </n-tab-pane>
 
-          <!-- 탭 4. 물리·화학적 특성 -->
+          <!-- 탭 4. 물리·화학적 특성 (섹션 9 행 테이블) -->
           <n-tab-pane name="physical" tab="물리·화학적 특성">
-            <n-form
-              label-placement="left"
-              label-width="110"
-              :show-require-mark="false"
-              class="form-section"
-            >
-              <n-form-item label="외관 / 상태">
-                <n-input
-                  v-model:value="physicalForm.appearance"
-                  type="textarea"
-                  placeholder="예: 무색 투명한 액체"
-                />
-              </n-form-item>
-              <n-form-item label="색 / 냄새">
-                <n-input
-                  v-model:value="physicalForm.color_odor"
-                  type="textarea"
-                  placeholder="예: 특유의 용제 냄새"
-                />
-              </n-form-item>
-              <n-form-item label="pH">
-                <n-input v-model:value="physicalForm.ph" placeholder="예: 7.0" />
-              </n-form-item>
-              <n-form-item label="비점">
-                <n-input
-                  v-model:value="physicalForm.boiling_point"
-                  placeholder="예: 80 ℃"
-                />
-              </n-form-item>
-              <n-form-item label="인화점">
-                <n-input
-                  v-model:value="physicalForm.flash_point"
-                  placeholder="예: 25 ℃"
-                />
-              </n-form-item>
-              <n-form-item label="기타 특성">
-                <n-input
-                  v-model:value="physicalForm.etc"
-                  type="textarea"
-                  placeholder="기타 물리·화학적 특성을 자유롭게 기록합니다."
-                />
-              </n-form-item>
-            </n-form>
+            <div class="physical-header">
+              <p class="physical-desc">
+                섹션 9(물리·화학적 특성)에서 추출된 항목/값 목록입니다. 필요한 행을 직접 수정하거나 추가·삭제할 수 있습니다.
+              </p>
+              <n-button size="small" tertiary @click="addPhysicalRow">
+                행 추가
+              </n-button>
+            </div>
+
+            <n-data-table
+              size="small"
+              :columns="physicalColumns"
+              :data="physicalRows"
+              :bordered="false"
+            />
+          </n-tab-pane>
+
+          <!-- 탭 5. 섹션 원문 -->
+          <n-tab-pane name="sections" tab="섹션 원문">
+            <p class="physical-desc" style="margin-bottom: 8px;">
+              섹션 1~16의 원문 내용입니다. 필요한 섹션의 제목/내용을 직접 수정할 수 있습니다.
+            </p>
+            <n-data-table
+              size="small"
+              :columns="sectionColumns"
+              :data="sectionRows"
+              :bordered="false"
+            />
           </n-tab-pane>
         </n-tabs>
       </n-spin>
@@ -199,17 +189,21 @@ const drawerTitle = computed(() => {
   return name ? `MSDS 상세 / 수정 - ${name}` : 'MSDS 상세 / 수정'
 })
 
-/* 1) 기본 정보 */
+/* --------------------------
+   1) 기본 정보 폼
+--------------------------- */
 const basicForm = reactive({
   chem_name: '',
   vendor_name: '',
-  cas_no: '',
   msds_no: '',
+  cas_no: '',
   revision_date: null,
   version_no: ''
 })
 
-/* 2) 유해성 정보 */
+/* --------------------------
+   2) 유해성 정보 폼
+--------------------------- */
 const hazardForm = reactive({
   signal_word: '',
   pictograms: '',
@@ -217,20 +211,22 @@ const hazardForm = reactive({
   p_codes: ''
 })
 
-/* 3) 구성 성분 (편집 가능 테이블) */
+/* --------------------------
+   3) 구성 성분 (편집 가능한 테이블)
+--------------------------- */
 const compositionRows = ref([])
 
 const compositionColumns = [
   {
     title: '물질명',
     key: 'name',
-    minWidth: 160,
-    render (row) {
+    minWidth: 180,
+    render (row, index) {
       return h(NInput, {
-        value: row.name,
-        placeholder: '물질명',
-        size: 'small',
-        'onUpdate:value': (v) => { row.name = v }
+        value: row.name || '',
+        onUpdateValue: (val) => {
+          compositionRows.value[index].name = val
+        }
       })
     }
   },
@@ -238,69 +234,59 @@ const compositionColumns = [
     title: 'CAS No.',
     key: 'cas_no',
     width: 160,
-    render (row) {
+    render (row, index) {
       return h(NInput, {
-        value: row.cas_no,
-        placeholder: 'CAS No.',
-        size: 'small',
-        'onUpdate:value': (v) => { row.cas_no = v }
+        value: row.cas_no || '',
+        onUpdateValue: (val) => {
+          compositionRows.value[index].cas_no = val
+        }
       })
     }
   },
   {
-    title: '함유량',
-    key: 'range',
-    width: 120,
-    render (row) {
-      return h(NInput, {
-        value: row.range,
-        placeholder: '예: 10-20',
-        size: 'small',
-        'onUpdate:value': (v) => { row.range = v }
-      })
-    }
-  },
-  {
-    title: '상한',
-    key: 'conc_max',
-    width: 80,
-    render (row) {
-      return h(NInput, {
-        value: row.conc_max,
-        placeholder: '',
-        size: 'small',
-        'onUpdate:value': (v) => { row.conc_max = v }
-      })
-    }
-  },
-  {
-    title: '하한',
+    title: '하한(%)',
     key: 'conc_min',
-    width: 80,
-    render (row) {
+    width: 90,
+    render (row, index) {
       return h(NInput, {
-        value: row.conc_min,
-        placeholder: '',
-        size: 'small',
-        'onUpdate:value': (v) => { row.conc_min = v }
+        value: row.conc_min ?? '',
+        onUpdateValue: (val) => {
+          const num = val === '' ? null : Number(val)
+          compositionRows.value[index].conc_min = isNaN(num) ? null : num
+        }
       })
     }
   },
   {
-    title: '대표값',
+    title: '상한(%)',
+    key: 'conc_max',
+    width: 90,
+    render (row, index) {
+      return h(NInput, {
+        value: row.conc_max ?? '',
+        onUpdateValue: (val) => {
+          const num = val === '' ? null : Number(val)
+          compositionRows.value[index].conc_max = isNaN(num) ? null : num
+        }
+      })
+    }
+  },
+  {
+    title: '대표값(%)',
     key: 'conc_repr',
-    width: 80,
-    render (row) {
+    width: 90,
+    render (row, index) {
       return h(NInput, {
-        value: row.conc_repr,
-        placeholder: '',
-        size: 'small',
-        'onUpdate:value': (v) => { row.conc_repr = v }
+        value: row.conc_repr ?? '',
+        onUpdateValue: (val) => {
+          const num = val === '' ? null : Number(val)
+          compositionRows.value[index].conc_repr = isNaN(num) ? null : num
+        }
       })
     }
   },
   {
-    title: '관리',
+    title: '',
     key: 'actions',
     width: 80,
     align: 'center',
@@ -308,9 +294,9 @@ const compositionColumns = [
       return h(
         NButton,
         {
-          size: 'tiny',
+          size: 'small',
+          tertiary: true,
           type: 'error',
-          quaternary: true,
           onClick: () => removeCompositionRow(index)
         },
         { default: () => '삭제' }
@@ -324,10 +310,9 @@ function addCompositionRow () {
     id: null,
     name: '',
     cas_no: '',
-    range: '',
-    conc_min: '',
-    conc_max: '',
-    conc_repr: ''
+    conc_min: null,
+    conc_max: null,
+    conc_repr: null
   })
 }
 
@@ -335,17 +320,120 @@ function removeCompositionRow (idx) {
   compositionRows.value.splice(idx, 1)
 }
 
-/* 4) 물리·화학적 특성 */
-const physicalForm = reactive({
-  appearance: '',
-  color_odor: '',
-  ph: '',
-  boiling_point: '',
-  flash_point: '',
-  etc: ''
-})
+/* --------------------------
+   4) 물리·화학적 특성 (행 테이블)
+--------------------------- */
 
-/* 5) 상세 조회 & 매핑 */
+const physicalRows = ref([])
+
+const physicalColumns = [
+  {
+    title: '항목',
+    key: 'item',
+    minWidth: 200,
+    render (row, index) {
+      return h(NInput, {
+        value: row.item || '',
+        onUpdateValue: (val) => {
+          physicalRows.value[index].item = val
+        }
+      })
+    }
+  },
+  {
+    title: '값',
+    key: 'value',
+    minWidth: 260,
+    render (row, index) {
+      return h(NInput, {
+        value: row.value || '',
+        onUpdateValue: (val) => {
+          physicalRows.value[index].value = val
+        }
+      })
+    }
+  },
+  {
+    title: '',
+    key: 'actions',
+    width: 80,
+    align: 'center',
+    render (row, index) {
+      return h(
+        NButton,
+        {
+          size: 'small',
+          tertiary: true,
+          type: 'error',
+          onClick: () => removePhysicalRow(index)
+        },
+        { default: () => '삭제' }
+      )
+    }
+  }
+]
+
+function addPhysicalRow () {
+  physicalRows.value.push({
+    id: null,
+    item: '',
+    value: ''
+  })
+}
+
+function removePhysicalRow (idx) {
+  physicalRows.value.splice(idx, 1)
+}
+
+/* --------------------------
+   5) 섹션 원문 (1~16) 편집 테이블
+--------------------------- */
+const sectionRows = ref([])
+
+const sectionColumns = [
+  {
+    title: '섹션',
+    key: 'section_num',
+    width: 70
+  },
+  {
+    title: '키',
+    key: 'section_key',
+    width: 140
+  },
+  {
+    title: '제목',
+    key: 'title',
+    minWidth: 180,
+    render (row, index) {
+      return h(NInput, {
+        value: row.title || '',
+        onUpdateValue: (val) => {
+          sectionRows.value[index].title = val
+        }
+      })
+    }
+  },
+  {
+    title: '내용',
+    key: 'content',
+    minWidth: 400,
+    render (row, index) {
+      return h(NInput, {
+        type: 'textarea',
+        value: row.content || '',
+        autosize: { minRows: 3, maxRows: 10 },
+        onUpdateValue: (val) => {
+          sectionRows.value[index].content = val
+        }
+      })
+    }
+  }
+]
+
+/* --------------------------
+   6) 상세 조회 & 매핑
+--------------------------- */
 async function fetchDetail () {
   if (!props.doc || !props.doc.id) return
   loading.value = true
@@ -356,34 +444,31 @@ async function fetchDetail () {
     )
     const data = resp.data || {}
 
-    // document
+    // 1) document → basicForm
     if (data.document) {
       const d = data.document
       basicForm.chem_name = d.chem_name || ''
       basicForm.vendor_name = d.vendor_name || ''
-      basicForm.cas_no = d.cas_no || ''
       basicForm.msds_no = d.msds_no || ''
+      basicForm.cas_no = d.cas_no || ''
       basicForm.version_no = d.version_no || ''
       basicForm.revision_date = d.revision_date || null
     } else {
       basicForm.chem_name = ''
       basicForm.vendor_name = ''
-      basicForm.cas_no = ''
       basicForm.msds_no = ''
+      basicForm.cas_no = ''
       basicForm.version_no = ''
       basicForm.revision_date = null
     }
 
-    // hazard
+    // 2) hazard
     if (data.hazard) {
       const h = data.hazard
       hazardForm.signal_word = h.signal_word || ''
-      hazardForm.pictograms =
-        Array.isArray(h.pictograms) ? h.pictograms.join(', ') : (h.pictograms || '')
-      hazardForm.h_codes =
-        Array.isArray(h.h_codes) ? h.h_codes.join(', ') : (h.h_codes || '')
-      hazardForm.p_codes =
-        Array.isArray(h.p_codes) ? h.p_codes.join(', ') : (h.p_codes || '')
+      hazardForm.pictograms = h.pictograms || ''
+      hazardForm.h_codes = h.h_codes || ''
+      hazardForm.p_codes = h.p_codes || ''
     } else {
       hazardForm.signal_word = ''
       hazardForm.pictograms = ''
@@ -391,56 +476,50 @@ async function fetchDetail () {
       hazardForm.p_codes = ''
     }
 
-    // composition
+    // 3) composition
     if (Array.isArray(data.composition)) {
       compositionRows.value = data.composition.map((c, idx) => {
-        const min = c.conc_min ?? c.min ?? null
-        const max = c.conc_max ?? c.max ?? null
+        const min = c.conc_min ?? null
+        const max = c.conc_max ?? null
         return {
           id: c.id ?? idx,
-          name: c.name || c.chem_name || c.component_name || '',
-          cas_no: c.cas_no || c.cas || '',
-          conc_min: min ?? '',
-          conc_max: max ?? '',
+          name: c.name || '',
+          cas_no: c.cas_no || '',
+          conc_min: min,
+          conc_max: max,
           conc_repr:
             c.conc_repr ??
             (min != null && max != null
               ? (Number(min) + Number(max)) / 2
-              : ''),
-          range:
-            c.range ||
-            (min != null && max != null ? `${min}-${max}` : '')
+              : null)
         }
       })
     } else {
       compositionRows.value = []
     }
 
-    // physical (객체 또는 배열 둘 다 처리)
-    let pRaw =
-      data.physical ||
-      data.physical_property ||
-      data.physical_properties ||
-      null
-
-    if (Array.isArray(pRaw)) {
-      pRaw = pRaw[0] || null
+    // 4) physical rows
+    if (Array.isArray(data.physical_rows)) {
+      physicalRows.value = data.physical_rows.map((r) => ({
+        id: r.id ?? null,
+        item: r.item || '',
+        value: r.value || ''
+      }))
+    } else {
+      physicalRows.value = []
     }
 
-    if (pRaw) {
-      physicalForm.appearance = pRaw.appearance || ''
-      physicalForm.color_odor = pRaw.color_odor || ''
-      physicalForm.ph = pRaw.ph || ''
-      physicalForm.boiling_point = pRaw.boiling_point || ''
-      physicalForm.flash_point = pRaw.flash_point || ''
-      physicalForm.etc = pRaw.etc || ''
+    // 5) sections (원문)
+    if (Array.isArray(data.sections)) {
+      sectionRows.value = data.sections.map((s) => ({
+        id: s.id ?? null,
+        section_num: s.section_num,
+        section_key: s.section_key || '',
+        title: s.title || '',
+        content: s.content || ''
+      }))
     } else {
-      physicalForm.appearance = ''
-      physicalForm.color_odor = ''
-      physicalForm.ph = ''
-      physicalForm.boiling_point = ''
-      physicalForm.flash_point = ''
-      physicalForm.etc = ''
+      sectionRows.value = []
     }
   } catch (err) {
     console.error(err)
@@ -449,7 +528,7 @@ async function fetchDetail () {
   }
 }
 
-/* Drawer 열릴 때마다 재조회 */
+/* Drawer가 열릴 때마다 상세 재조회 */
 watch(
   () => props.show,
   (visible) => {
@@ -460,7 +539,9 @@ watch(
   }
 )
 
-/* 6) 저장 */
+/* --------------------------
+   7) 저장
+--------------------------- */
 async function handleSave () {
   if (!props.doc || !props.doc.id) return
 
@@ -468,8 +549,8 @@ async function handleSave () {
     document: {
       chem_name: basicForm.chem_name,
       vendor_name: basicForm.vendor_name,
-      cas_no: basicForm.cas_no,
       msds_no: basicForm.msds_no,
+      cas_no: basicForm.cas_no,
       revision_date: basicForm.revision_date,
       version_no: basicForm.version_no
     },
@@ -479,8 +560,26 @@ async function handleSave () {
       h_codes: hazardForm.h_codes,
       p_codes: hazardForm.p_codes
     },
-    composition: compositionRows.value,
-    physical: { ...physicalForm }
+    composition: compositionRows.value.map((c) => ({
+      id: c.id ?? null,
+      name: c.name || null,
+      cas_no: c.cas_no || null,
+      conc_min: c.conc_min,
+      conc_max: c.conc_max,
+      conc_repr: c.conc_repr
+    })),
+    physical_rows: physicalRows.value.map((r) => ({
+      id: r.id ?? null,
+      item: r.item || '',
+      value: r.value || ''
+    })),
+    sections: sectionRows.value.map((s) => ({
+      id: s.id ?? null,
+      section_num: s.section_num,
+      section_key: s.section_key || null,
+      title: s.title || null,
+      content: s.content || ''
+    }))
   }
 
   try {
@@ -506,9 +605,16 @@ async function handleSave () {
   gap: 8px;
 }
 
-.composition-toolbar {
-  margin-bottom: 8px;
+.physical-header {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.physical-desc {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
 }
 </style>

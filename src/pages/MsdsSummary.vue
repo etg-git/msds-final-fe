@@ -374,6 +374,7 @@ onMounted(() => {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.4fr);
   gap: 20px;
+  align-items: stretch; /* 양쪽 패널 모두 카드 높이에 맞춰 늘리기 */
 }
 
 /* 왼쪽 패널 */
@@ -490,6 +491,67 @@ onMounted(() => {
   overflow: hidden;
 }
 
+/* 상세 탭 안에서 MsdsSummaryDetail 감싸는 래퍼 */
+.detail-wrapper {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden; /* 내부에서만 스크롤 */
+}
+
+/* MsdsSummaryDetail 내부 레이아웃 강제 정렬 */
+.detail-wrapper :deep(.page) {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  background-color: transparent;
+  box-sizing: border-box;
+}
+
+.detail-wrapper :deep(.sections-card) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-wrapper :deep(.sections-card .n-card__content) {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-wrapper :deep(.sections-tabs) {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-wrapper :deep(.sections-tabs .n-tabs-content) {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.detail-wrapper :deep(.tab-pane-inner) {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.detail-wrapper :deep(.section-raw-card) {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.detail-wrapper :deep(.section-scroll) {
+  height: 100%;
+  max-height: none;
+}
+
 /* 요약 탭 안쪽 스크롤 */
 .summary-text-wrapper {
   flex: 1 1 auto;
@@ -538,21 +600,9 @@ onMounted(() => {
   color: #9ca3af;
 }
 
-/* 상세 탭 안에서 MsdsSummaryDetail 감싸는 래퍼 */
-.detail-wrapper {
-  height: 100%;
-  overflow: auto;
-}
-
 .detail-empty {
   font-size: 13px;
   color: #6b7280;
-}
-
-/* MsdsSummaryDetail 내부 page 스타일 약하게 */
-.detail-wrapper :deep(.page) {
-  background-color: transparent;
-  padding: 0;
 }
 
 /* RAG 전체 오버레이 */

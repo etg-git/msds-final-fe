@@ -1,84 +1,86 @@
 <template>
   <n-config-provider :theme-overrides="themeOverrides">
     <!-- 전역 메시지 사용 가능 -->
-    <n-message-provider>
-      <n-layout has-sider class="app-layout">
-        <!-- 사이드바 -->
-        <n-layout-sider
-          bordered
-          collapse-mode="width"
-          :collapsed-width="72"
-          :native-scrollbar="false"
-          width="240"
-          class="app-sider"
-        >
-          <div class="sider-inner">
-            <!-- 로고 / 타이틀 영역 -->
-            <div class="logo-block">
-              <div class="logo-mark">🧪</div>
-              <div class="logo-text">
-                <div class="logo-title">MSDS AI</div>
-                <div class="logo-sub">Safety Data Workspace</div>
+    <n-dialog-provider>
+      <n-message-provider>
+        <n-layout has-sider class="app-layout">
+          <!-- 사이드바 -->
+          <n-layout-sider
+            bordered
+            collapse-mode="width"
+            :collapsed-width="72"
+            :native-scrollbar="false"
+            width="240"
+            class="app-sider"
+          >
+            <div class="sider-inner">
+              <!-- 로고 / 타이틀 영역 -->
+              <div class="logo-block">
+                <div class="logo-mark">🧪</div>
+                <div class="logo-text">
+                  <div class="logo-title">MSDS AI</div>
+                  <div class="logo-sub">Safety Data Workspace</div>
+                </div>
+              </div>
+
+              <!-- 메뉴: MSDS -->
+              <div class="menu-section-label">MSDS</div>
+              <n-menu
+                class="app-menu"
+                :options="msdsMenuOptions"
+                :value="activeKey"
+                :indent="18"
+                :collapsed-icon-size="20"
+                :root-indent="20"
+                @update:value="handleMenuSelect"
+              />
+
+              <!-- 메뉴: SHMS / API -->
+              <div class="menu-section-label second">SHMS / API</div>
+              <n-menu
+                class="app-menu"
+                :options="shmsMenuOptions"
+                :value="activeKey"
+                :indent="18"
+                :collapsed-icon-size="20"
+                :root-indent="20"
+                @update:value="handleMenuSelect"
+              />
+
+              <!-- 하단 작은 정보 -->
+              <div class="sider-footer">
+                <div class="env-pill">LOCAL · DEV</div>
+                <div class="version-text">v0.1.0</div>
               </div>
             </div>
+          </n-layout-sider>
 
-            <!-- 메뉴: MSDS -->
-            <div class="menu-section-label">MSDS</div>
-            <n-menu
-              class="app-menu"
-              :options="msdsMenuOptions"
-              :value="activeKey"
-              :indent="18"
-              :collapsed-icon-size="20"
-              :root-indent="20"
-              @update:value="handleMenuSelect"
-            />
-
-            <!-- 메뉴: SHMS / API -->
-            <div class="menu-section-label second">SHMS / API</div>
-            <n-menu
-              class="app-menu"
-              :options="shmsMenuOptions"
-              :value="activeKey"
-              :indent="18"
-              :collapsed-icon-size="20"
-              :root-indent="20"
-              @update:value="handleMenuSelect"
-            />
-
-            <!-- 하단 작은 정보 -->
-            <div class="sider-footer">
-              <div class="env-pill">LOCAL · DEV</div>
-              <div class="version-text">v0.1.0</div>
-            </div>
-          </div>
-        </n-layout-sider>
-
-        <!-- 메인 레이아웃 -->
-        <n-layout>
-          <!-- <n-layout-header bordered class="app-header">
-            <div class="header-left">
-              <div class="header-breadcrumb">
-                <span class="crumb-root">MSDS AI</span>
-                <span class="crumb-sep">/</span>
-                <span class="crumb-leaf">{{ headerTitle }}</span>
+          <!-- 메인 레이아웃 -->
+          <n-layout>
+            <!-- <n-layout-header bordered class="app-header">
+              <div class="header-left">
+                <div class="header-breadcrumb">
+                  <span class="crumb-root">MSDS AI</span>
+                  <span class="crumb-sep">/</span>
+                  <span class="crumb-leaf">{{ headerTitle }}</span>
+                </div>
+                <div class="header-main">
+                  <span class="header-title">{{ headerTitle }}</span>
+                  <span
+                    v-if="headerSubtitle"
+                    class="header-subtitle"
+                  >{{ headerSubtitle }}</span>
+                </div>
               </div>
-              <div class="header-main">
-                <span class="header-title">{{ headerTitle }}</span>
-                <span
-                  v-if="headerSubtitle"
-                  class="header-subtitle"
-                >{{ headerSubtitle }}</span>
-              </div>
-            </div>
-          </n-layout-header> -->
+            </n-layout-header> -->
 
-          <n-layout-content embedded class="app-content">
-            <RouterView />
-          </n-layout-content>
+            <n-layout-content embedded class="app-content">
+              <RouterView />
+            </n-layout-content>
+          </n-layout>
         </n-layout>
-      </n-layout>
-    </n-message-provider>
+      </n-message-provider>
+    </n-dialog-provider>
   </n-config-provider>
 </template>
 
@@ -90,6 +92,7 @@ import {
   NLayoutSider,
   NLayoutContent,
   NLayoutHeader,
+  NDialogProvider,
   NConfigProvider,
   NMenu,
   NMessageProvider

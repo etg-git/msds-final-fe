@@ -7,7 +7,7 @@
             <h1 class="title">MSDS 관리</h1>
             <p class="subtitle">
               저장된 MSDS 문서를 조회·검색하고,
-              각 행의 ‘상세 / 수정’ 링크를 눌러 기본 정보와 구성성분, 유해성, 물리·화학적 특성을 수정합니다.
+              각 행의 ‘상세 / 수정’ 버튼을 눌러 기본 정보와 CAS No., 구성성분, 유해성, 물리·화학적 특성, 섹션 원문을 수정합니다.
             </p>
           </div>
           <n-button size="small" tertiary @click="fetchDocs" :loading="listLoading">
@@ -16,15 +16,18 @@
         </div>
       </template>
 
-      <n-spin :show="listLoading">
-        <n-data-table
-          size="small"
-          :columns="columns"
-          :data="docs"
-          :bordered="false"
-          :single-line="true"
-        />
-      </n-spin>
+      <!-- 카드 내부 스크롤 영역 -->
+      <div class="table-wrapper">
+        <n-spin :show="listLoading">
+          <n-data-table
+            size="small"
+            :columns="columns"
+            :data="docs"
+            :bordered="false"
+            :single-line="true"
+          />
+        </n-spin>
+      </div>
     </n-card>
 
     <!-- 상세 / 수정 드로어 -->
@@ -45,9 +48,10 @@ import {
   NSpin,
   NDataTable,
   NIcon,
-  NTag
+  useDialog,
+  useMessage
 } from 'naive-ui'
-import { PencilOutline } from '@vicons/ionicons5'
+import { PencilOutline, TrashOutline } from '@vicons/ionicons5'
 
 import MsdsManageDetailDrawer from './MsdsManageDetailDrawer.vue'
 
@@ -57,9 +61,11 @@ const API_BASE_URL =
 const docs = ref([])
 const listLoading = ref(false)
 
-// 상세 드로어 상태
 const detailVisible = ref(false)
 const selectedDoc = ref(null)
+
+const dialog = useDialog()
+const message = useMessage()
 
 function openDetail (row) {
   if (!row || !row.id) return
@@ -67,7 +73,65 @@ function openDetail (row) {
   detailVisible.value = true
 }
 
-// 규제사항 검증 화면과 거의 동일한 컬럼 포맷
+/** 삭제 확인 다이얼로그 */
+function confirmDelete (row) {
+  if (!row || !row.id) return
+
+  dialog.warning({
+    title: '알림',
+    positiveText: '삭제',
+    negativeText: '취소',
+    positiveButtonProps: {
+      type: 'error'
+    },
+    content: () =>
+      h('div', { style: 'font-size:13px; line-height:1.6;' }, [
+        h(
+          'p',
+          {
+            style:
+              'font-size:16px; font-weight:800; color:#b91c1c;'
+          },
+          '정말 삭제하시겠습니까?'
+        ),
+        h(
+          'p',
+          {
+            style:
+              'margin:0 0 10px; font-size:14px; color:#4b5563;'
+          },
+          '이 문서와 연결된 모든 정보가 아래 항목까지 포함하여 영구적으로 삭제됩니다.'
+        ),
+        h(
+          'ol',
+          {
+            style:
+              'margin:0; padding-left:18px; font-size:14px; color:#374151;'
+          },
+          [
+            h('li', '제품명 / 회사 정보'),
+            h('li', '유해/위험성 GHS 정보'),
+            h('li', '구성성분 목록'),
+            h('li', 'Charm 관련된 정보'),
+            h('li', 'MSDS 섹션별 원문 텍스트')
+          ]
+        )
+      ]),
+    async onPositiveClick () {
+      try {
+        await axios.delete(`${API_BASE_URL}/msds/${row.id}`)
+        message.success('MSDS와 관련된 모든 정보가 삭제되었습니다.')
+        await fetchDocs()
+      } catch (err) {
+        console.error(err)
+        message.error('삭제 중 오류가 발생했습니다. 다시 시도해 주세요.')
+        throw err
+      }
+    }
+  })
+}
+
+// 컬럼 정의 – 관리 컬럼에 삭제 버튼 추가
 const columns = [
   {
     title: '제품명',
@@ -83,15 +147,15 @@ const columns = [
     ellipsis: { tooltip: true }
   },
   {
-    title: 'Cas No.',
+    title: 'CAS No.',
     key: 'cas_no',
-    width: 220,
+    width: 200,
     ellipsis: { tooltip: true }
   },
   {
-    title: 'MSDS No.',
+    title: 'MSDS_NO',
     key: 'msds_no',
-    width: 220,
+    width: 200,
     ellipsis: { tooltip: true }
   },
   {
@@ -107,33 +171,54 @@ const columns = [
   {
     title: '관리',
     key: 'action',
-    width: 140,
+    width: 190,
     align: 'center',
     render (row) {
-      return h(
-        NButton,
-        {
-          size: 'small',
-          type: 'primary',
-          tertiary: true,
-          onClick: () => openDetail(row)
-        },
-        {
-          default: () => [
-            h(
-              NIcon,
-              { style: { marginRight: '4px' } },
-              { default: () => h(PencilOutline) }
-            ),
-            '상세 / 수정'
-          ]
-        }
-      )
+      return [
+        h(
+          NButton,
+          {
+            size: 'small',
+            type: 'primary',
+            tertiary: true,
+            style: 'margin-right:6px;',
+            onClick: () => openDetail(row)
+          },
+          {
+            default: () => [
+              h(
+                NIcon,
+                { style: { marginRight: '4px' } },
+                { default: () => h(PencilOutline) }
+              ),
+              '상세 / 수정'
+            ]
+          }
+        ),
+        h(
+          NButton,
+          {
+            size: 'small',
+            type: 'error',
+            tertiary: true,
+            onClick: () => confirmDelete(row)
+          },
+          {
+            default: () => [
+              h(
+                NIcon,
+                { style: { marginRight: '4px' } },
+                { default: () => h(TrashOutline) }
+              ),
+              '삭제'
+            ]
+          }
+        )
+      ]
     }
   }
 ]
 
-// 문서 목록 조회
 async function fetchDocs () {
   listLoading.value = true
   try {
@@ -151,6 +236,7 @@ onMounted(() => {
 })
 </script>
 
+
 <style scoped>
 .page {
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI',
@@ -158,11 +244,30 @@ onMounted(() => {
   max-width: 2300px;
   margin: 0 auto;
   padding: 16px 0 32px;
+  box-sizing: border-box;
+  height: calc(100vh - 80px);
 }
 
+/* 메인 카드가 페이지 높이를 꽉 쓰도록 */
 .list-card {
   border-radius: 16px;
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  height: 100%;
+}
+
+/* 카드 내용부를 flex column으로 만들어서 하단 영역만 스크롤 */
+.list-card :deep(.n-card__content) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding-top: 0;
+}
+
+/* 테이블이 들어가는 부분만 세로 스크롤 */
+.table-wrapper {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 /* 카드 헤더 – shmsRegulApi랑 같은 느낌 */
@@ -189,5 +294,13 @@ onMounted(() => {
   font-size: 13px;
   color: #6b7280;
   margin: 0;
+}
+
+/* 관리 버튼 영역 (상세 / 수정 + 삭제) */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
 }
 </style>
