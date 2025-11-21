@@ -1,150 +1,151 @@
 <template>
   <div class="page">
-    <!-- 상단 헤더 카드 (업로드 페이지와 유사) -->
-    <div class="page-header">
-      <div class="page-title-block">
-        <h1 class="page-title">MSDS 상세보기</h1>
-        <p class="page-subtitle">
-          저장된 MSDS 중 하나를 선택하면 섹션 1, 2, 3, 9, 15를 중심으로
-          AI 요약과 상세 정보를 함께 볼 수 있습니다.
-        </p>
-      </div>
-      <n-button size="small" tertiary @click="fetchDocs">
-        목록 새로고침
-      </n-button>
-    </div>
+    <n-card class="list-card" size="small" :bordered="false">
+      <!-- shmsRegulApi 와 동일한 카드 헤더 레이아웃 -->
+      <template #header>
+        <div class="card-header">
+          <div class="title-block">
+            <h1 class="title">MSDS 상세보기</h1>
+            <p class="subtitle">
+              저장된 MSDS 중 하나를 선택하면 섹션 1, 2, 3, 9, 15를 중심으로
+              AI 요약과 상세 정보를 함께 볼 수 있습니다.
+            </p>
+          </div>
+          <n-button size="small" tertiary @click="fetchDocs">
+            목록 새로고침
+          </n-button>
+        </div>
+      </template>
 
-    <!-- 본문 -->
-    <div class="page-body">
-      <!-- 왼쪽: MSDS 목록 -->
-      <div class="left-panel">
-        <div class="panel-header">
-          <div class="panel-title">저장된 MSDS 목록</div>
+      <!-- 본문: 좌측 목록 / 우측 상세 -->
+      <div class="page-body">
+        <!-- 왼쪽: MSDS 목록 -->
+        <div class="left-panel">
+          <div class="panel-header">
+            <div class="panel-title">저장된 MSDS 목록</div>
+          </div>
+
+          <div class="panel-body">
+            <n-spin :show="listLoading">
+              <n-data-table
+                size="small"
+                :columns="columns"
+                :data="docs"
+                :row-props="rowProps"
+                :row-class-name="rowClassName"
+                :bordered="false"
+                :single-line="true"
+              />
+            </n-spin>
+          </div>
         </div>
 
-        <div class="panel-body">
-          <n-spin :show="listLoading">
-            <n-data-table
-              size="small"
-              :columns="columns"
-              :data="docs"
-              :row-props="rowProps"
-              :row-class-name="rowClassName"
-              :bordered="false"
-              :single-line="true"
-            />
-          </n-spin>
-        </div>
-      </div>
-
-      <!-- 오른쪽: AI 요약 + 상세 탭 -->
-      <div class="right-panel">
-        <n-card size="small" class="summary-card">
-          <template #header>
-            <div class="summary-card-header">
-              <div class="summary-card-title">
-                {{ summaryTitle }}
-              </div>
-            </div>
-          </template>
-
-          <template v-if="selectedDoc">
-            <!-- 상단 메타 -->
-            <div class="summary-meta">
-              <div class="summary-meta-row">
-                <span class="label">제품명</span>
-                <span class="value">{{ selectedDoc.chem_name || '-' }}</span>
-                <span class="label">회사명</span>
-                <span class="value">{{ selectedDoc.vendor_name || '-' }}</span>
-              </div>
-              <div class="summary-meta-row">
-                <span class="label">Cas No.</span>
-                <span class="value">{{ selectedDoc.cas_no || '-' }}</span>
-                <span class="label">MSDS No.</span>
-                <span class="value">{{ selectedDoc.msds_no || '-' }}</span>
-              </div>
-              <div class="summary-meta-row">
-                <span class="label">개정일자</span>
-                <span class="value">{{ selectedDoc.revision_date || '-' }}</span>
-                <span class="label">개정번호</span>
-                <span class="value">{{ selectedDoc.version_no || '-' }}</span>
-              </div>
-            </div>
-
-            <!-- AI 요약 / 상세 탭 -->
-            <n-tabs
-              v-model:value="activeTab"
-              type="line"
-              @update:value="handleTabChange"
-              class="summary-tabs"
-            >
-              <!-- 탭 2: 상세 (MsdsDetail 컴포넌트 그대로 사용) -->
-              <n-tab-pane name="detail" tab="상세">
-                <div class="detail-wrapper" v-if="selectedDocId">
-                  <MsdsDetail :document-id="selectedDocId" />
+        <!-- 오른쪽: AI 요약 + 상세 탭 -->
+        <div class="right-panel">
+          <n-card size="small" class="summary-card">
+            <template #header>
+              <div class="summary-card-header">
+                <div class="summary-card-title">
+                  {{ summaryTitle }}
                 </div>
-                <div v-else class="detail-empty">
-                  선택된 문서가 없습니다.
-                </div>
-              </n-tab-pane>
+              </div>
+            </template>
 
-              <!-- 탭 1: AI 요약 -->
-              <n-tab-pane name="summary" tab="AI 요약">
-                <div class="question-block">
-                  <div class="question-label">질문(프롬프트)</div>
-                  <n-input
-                    v-model:value="question"
-                    type="textarea"
-                    :autosize="{ minRows: 5, maxRows: 8 }"
-                  />
-                  <div class="question-actions">
-                    <n-space justify="end">
-                      <n-button size="small" tertiary @click="resetQuestion">
-                        기본 질문으로 되돌리기
-                      </n-button>
-                      <n-button
-                        size="small"
-                        type="primary"
-                        :loading="summaryLoading"
-                        @click="runSummary"
-                      >
-                        AI 요약 다시 실행
-                      </n-button>
-                    </n-space>
+            <template v-if="selectedDoc">
+              <!-- 상단 메타 -->
+              <div class="summary-meta">
+                <div class="summary-meta-row">
+                  <span class="label">제품명</span>
+                  <span class="value">{{ selectedDoc.chem_name || '-' }}</span>
+                  <span class="label">회사명</span>
+                  <span class="value">{{ selectedDoc.vendor_name || '-' }}</span>
+                </div>
+                <div class="summary-meta-row">
+                  <span class="label">Cas No.</span>
+                  <span class="value">{{ selectedDoc.cas_no || '-' }}</span>
+                  <span class="label">MSDS No.</span>
+                  <span class="value">{{ selectedDoc.msds_no || '-' }}</span>
+                </div>
+                <div class="summary-meta-row">
+                  <span class="label">개정일자</span>
+                  <span class="value">{{ selectedDoc.revision_date || '-' }}</span>
+                  <span class="label">개정번호</span>
+                  <span class="value">{{ selectedDoc.version_no || '-' }}</span>
+                </div>
+              </div>
+
+              <!-- AI 요약 / 상세 탭 -->
+              <n-tabs
+                v-model:value="activeTab"
+                type="line"
+                @update:value="handleTabChange"
+                class="summary-tabs"
+              >
+                <!-- 상세 탭 -->
+                <n-tab-pane name="detail" tab="상세">
+                  <div class="detail-wrapper" v-if="selectedDocId">
+                    <MsdsSummaryDetail :document-id="selectedDocId" />
                   </div>
-                </div>
+                  <div v-else class="detail-empty">
+                    선택된 문서가 없습니다.
+                  </div>
+                </n-tab-pane>
 
-                <n-divider />
+                <!-- AI 요약 탭 -->
+                <n-tab-pane name="summary" tab="AI 요약">
+                  <div class="question-block">
+                    <div class="question-label">질문(프롬프트)</div>
+                    <n-input
+                      v-model:value="question"
+                      type="textarea"
+                      :autosize="{ minRows: 5, maxRows: 8 }"
+                    />
+                    <div class="question-actions">
+                      <n-space justify="end">
+                        <n-button size="small" tertiary @click="resetQuestion">
+                          기본 질문으로 되돌리기
+                        </n-button>
+                        <n-button
+                          size="small"
+                          type="primary"
+                          :loading="summaryLoading"
+                          @click="runSummary"
+                        >
+                          AI 요약 다시 실행
+                        </n-button>
+                      </n-space>
+                    </div>
+                  </div>
 
-                <div class="summary-text-wrapper">
-                  <!-- <n-spin :show="summaryLoading"> -->
+                  <n-divider />
+
+                  <div class="summary-text-wrapper">
                     <div v-if="summaryError" class="summary-error">
                       {{ summaryError }}
                     </div>
                     <pre v-else class="summary-text">
 {{ summaryText || '아직 AI 요약이 없습니다. AI 요약 다시 실행 버튼을 눌러 주세요.' }}
                     </pre>
-                  <!-- </n-spin> -->
 
-                  <!-- AI 주의 문구 -->
-                  <div class="ai-disclaimer">
-                    AI는 실수할 수 있습니다. 항상 원본 MSDS와 상단의 표·섹션 정보를 함께 확인해 주세요.
+                    <div class="ai-disclaimer">
+                      AI는 실수할 수 있습니다. 항상 원본 MSDS와 상단의 표·섹션 정보를 함께 확인해 주세요.
+                    </div>
                   </div>
-                </div>
-              </n-tab-pane>
-            </n-tabs>
-          </template>
+                </n-tab-pane>
+              </n-tabs>
+            </template>
 
-          <template v-else>
-            <div class="summary-empty-wrapper">
-              <n-empty
-                description="왼쪽 목록에서 MSDS를 선택하면 AI 요약과 상세 정보가 여기 표시됩니다."
-              />
-            </div>
-          </template>
-        </n-card>
+            <template v-else>
+              <div class="summary-empty-wrapper">
+                <n-empty
+                  description="왼쪽 목록에서 MSDS를 선택하면 AI 요약과 상세 정보가 여기 표시됩니다."
+                />
+              </div>
+            </template>
+          </n-card>
+        </div>
       </div>
-    </div>
+    </n-card>
 
     <!-- RAG 실행 시 전체 화면 로딩 오버레이 -->
     <div v-if="summaryLoading" class="page-overlay">
@@ -168,9 +169,8 @@ import {
   NTabs,
   NTabPane
 } from 'naive-ui'
-import MsdsDetail from './MsdsDetail.vue'
+import MsdsSummaryDetail from './MsdsSummaryDetail.vue'
 
-// 문서 목록 / RAG 백엔드
 const BACKEND_BASE_URL =
   import.meta.env.VITE_MSDS_BACKEND_URL || 'http://localhost:8000'
 
@@ -186,7 +186,7 @@ const summaryText = ref('')
 const summaryLoading = ref(false)
 const summaryError = ref('')
 
-const activeTab = ref('detail') // 기본은 상세 탭 먼저 보이게
+const activeTab = ref('detail') // 기본은 상세 탭
 
 const defaultQuestion =
   '이 MSDS 문서를 현장 작업자와 안전관리자가 빠르게 이해할 수 있도록, ' +
@@ -211,7 +211,7 @@ const columns = [
     title: '제품명',
     key: 'chem_name',
     ellipsis: { tooltip: true },
-    render(row) {
+    render (row) {
       return row.chem_name || row.file_name || '-'
     }
   },
@@ -246,7 +246,7 @@ const rowProps = (row) => ({
 const rowClassName = (row) =>
   row.id === selectedDocId.value ? 'msds-row-selected' : ''
 
-async function fetchDocs() {
+async function fetchDocs () {
   listLoading.value = true
   try {
     const resp = await axios.get(`${BACKEND_BASE_URL}/msds/documents`)
@@ -258,20 +258,19 @@ async function fetchDocs() {
   }
 }
 
-function handleSelectRow(row) {
+function handleSelectRow (row) {
   if (!row || !row.id) return
   selectedDocId.value = row.id
   summaryText.value = ''
   summaryError.value = ''
-  // 선택 바뀌면 기본은 상세부터
   activeTab.value = 'detail'
 }
 
-function resetQuestion() {
+function resetQuestion () {
   question.value = defaultQuestion
 }
 
-async function runSummary() {
+async function runSummary () {
   if (!selectedDocId.value) return
 
   summaryLoading.value = true
@@ -280,7 +279,6 @@ async function runSummary() {
     const payload = {
       document_id: selectedDocId.value,
       question: question.value
-      // sections_filter 안 보냄 → 백엔드 기본값 사용
     }
 
     const resp = await axios.post(
@@ -304,11 +302,10 @@ async function runSummary() {
   }
 }
 
-function handleTabChange(tab) {
-  // 필요하면 탭 전환 시 자동 요약 실행 같은 로직 넣어도 됨
+function handleTabChange (tab) {
+  // 필요 시 탭 전환 로직 추가
 }
 
-// 선택된 문서가 바뀌면 항상 상세 탭부터
 watch(selectedDocId, () => {
   activeTab.value = 'detail'
 })
@@ -324,67 +321,67 @@ onMounted(() => {
     system-ui, -apple-system, sans-serif;
   max-width: 2300px;
   margin: 0 auto;
-  padding: 12px 16px 16px;
+  padding: 16px 0 32px;
   box-sizing: border-box;
+  height: calc(100vh - 80px); /* shmsRegulApi 와 동일 컨셉 */
+}
 
-  background-color: transparent;
+/* 메인 카드가 페이지 높이를 꽉 채우도록 */
+.list-card {
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  height: 100%;
+}
 
-  /* 부모(#app / app-layout) 기준으로 꽉 채우기 */
+/* 카드 내용부를 flex column 으로 → 내부 레이아웃이 높이를 나눠 가짐 */
+.list-card :deep(.n-card__content) {
   height: 100%;
   display: flex;
   flex-direction: column;
-  position: relative;
-  overflow: hidden; /* 내부 패널만 스크롤 */
+  padding-top: 0;
 }
 
-/* 상단 헤더 */
-.page-header {
-  flex: 0 0 auto;
+/* 카드 헤더 (shmsRegulApi 와 동일 스타일) */
+.card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
-  margin: 0 0 12px 0;
-  padding: 16px 20px;
-  border-radius: 16px;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
 }
 
-.page-title-block {
+.title-block {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.page-title {
-  font-size: 22px;
+.title {
+  font-size: 20px;
   font-weight: 700;
   margin: 0;
 }
 
-.page-subtitle {
+.subtitle {
   font-size: 13px;
-  color: #7f8596;
+  color: #6b7280;
   margin: 0;
 }
 
-/* 본문 전체 레이아웃 */
+/* 카드 안쪽 본문 전체 레이아웃 */
 .page-body {
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.4fr);
   gap: 20px;
 }
 
 /* 왼쪽 패널 */
 .left-panel {
   background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
-  padding: 16px 18px 18px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+  padding: 12px 14px 14px;
   box-sizing: border-box;
 
   display: flex;
@@ -396,7 +393,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .panel-title {
@@ -420,8 +417,8 @@ onMounted(() => {
 
 .summary-card {
   width: 100%;
-  border-radius: 16px;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
 
   display: flex;
   flex-direction: column;
@@ -438,7 +435,7 @@ onMounted(() => {
   font-weight: 600;
 }
 
-/* Naive 카드 컨텐츠 높이 고정 + 스크롤 가능 */
+/* summary 카드 내용부 높이 분배 */
 .summary-card :deep(.n-card__content) {
   flex: 1 1 auto;
   min-height: 0;
@@ -541,7 +538,7 @@ onMounted(() => {
   color: #9ca3af;
 }
 
-/* 상세 탭 안에서 MsdsDetail 감싸는 래퍼 */
+/* 상세 탭 안에서 MsdsSummaryDetail 감싸는 래퍼 */
 .detail-wrapper {
   height: 100%;
   overflow: auto;
@@ -552,7 +549,7 @@ onMounted(() => {
   color: #6b7280;
 }
 
-/* MSDS Detail 내부 page 스타일 살짝 억제 */
+/* MsdsSummaryDetail 내부 page 스타일 약하게 */
 .detail-wrapper :deep(.page) {
   background-color: transparent;
   padding: 0;

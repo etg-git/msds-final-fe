@@ -16,15 +16,18 @@
         </div>
       </template>
 
-      <n-spin :show="listLoading">
-        <n-data-table
-          size="small"
-          :columns="columns"
-          :data="docs"
-          :bordered="false"
-          :single-line="true"
-        />
-      </n-spin>
+      <!-- 여기부터 높이 제한 + 내부 스크롤 -->
+      <div class="table-wrapper">
+        <n-spin :show="listLoading">
+          <n-data-table
+            size="small"
+            :columns="columns"
+            :data="docs"
+            :bordered="false"
+            :single-line="true"
+          />
+        </n-spin>
+      </div>
     </n-card>
 
     <!-- 규제사항 모달 컴포넌트 -->
@@ -48,7 +51,6 @@ import {
 import { SearchOutline } from '@vicons/ionicons5'  // ← 돋보기 아이콘
 
 import ShmsRegulDetailModal from './ShmsRegulDetailModal.vue'
-// import ShmsRegulDetailModal from './ShmsRegulDetailModal2.vue'
 
 const API_BASE_URL =
   import.meta.env.VITE_MSDS_API_BASE || 'http://localhost:8000'
@@ -115,7 +117,7 @@ const columns = [
         {
           size: 'small',
           type: 'success',
-          tertiary: true,      // 연두색 테두리 느낌
+          tertiary: true,
           onClick: () => openRegulationModal(row)
         },
         {
@@ -138,7 +140,6 @@ async function fetchDocs () {
   listLoading.value = true
   try {
     const resp = await axios.get(`${API_BASE_URL}/msds/documents`)
-
     docs.value = Array.isArray(resp.data) ? resp.data : []
   } catch (err) {
     console.error(err)
@@ -159,11 +160,30 @@ onMounted(() => {
   max-width: 2300px;
   margin: 0 auto;
   padding: 16px 0 32px;
+  height: calc(100vh - 80px);  /* 상단 헤더 높이에 맞게 숫자 조정 가능 */
+  box-sizing: border-box;
 }
 
+/* 카드가 페이지 높이를 꽉 쓰도록 */
 .list-card {
   border-radius: 16px;
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  height: 100%;
+}
+
+/* 카드 내용부를 flex column 으로 만들어서 테이블 영역만 스크롤 */
+.list-card :deep(.n-card__content) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding-top: 0;
+}
+
+/* 테이블 래퍼: 안에서만 스크롤 */
+.table-wrapper {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 /* 카드 헤더 */
@@ -192,7 +212,7 @@ onMounted(() => {
   margin: 0;
 }
 
-/* 링크 스타일 */
+/* 링크 스타일 (혹시 다른 곳에서 쓸 수도 있으니 유지) */
 .regul-link {
   font-size: 12px;
   color: #16a34a;

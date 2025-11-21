@@ -914,18 +914,24 @@ function buildSavePayload(src) {
 <style scoped>
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
-
 .page {
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI',
     system-ui, -apple-system, sans-serif;
   max-width: 2300px;
   margin: 0 auto;
-  padding-bottom: 32px;
+  padding: 16px 0 32px;
   background-color: transparent;
+  box-sizing: border-box;
+
+  /* shmsRegulApi와 동일 컨셉: 뷰포트 기준 높이 고정 */
+  height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
 }
 
 /* 상단 타이틀 영역: 배경색 + 카드 느낌 */
 .page-header {
+  flex: 0 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -939,20 +945,32 @@ function buildSavePayload(src) {
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
 }
 
+/* 본문은 남은 높이를 나눠 쓰게 */
 .page-body {
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   gap: 32px;
-  align-items: flex-start;
+  align-items: stretch;
 }
 
-/* 왼쪽(업로드) 영역 더 좁게, 오른쪽(요약) 넓게 */
+/* 왼쪽(업로드) 영역 */
 .page-left {
   flex: 2;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 }
 
-/* 오른쪽에 세로 separator 느낌 */
+/* 오른쪽(요약) 영역 */
 .page-right {
   flex: 3;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+
   border-left: 1px solid #e5e7eb;
   padding-left: 32px;
 }
@@ -962,11 +980,15 @@ function buildSavePayload(src) {
     flex-direction: column;
   }
 
+  .page-left,
+  .page-right {
+    overflow-y: visible;
+  }
+
   .upload-card {
     max-width: 100%;
   }
 
-  /* 모바일에서는 separator 제거 */
   .page-right {
     border-left: none;
     padding-left: 0;
@@ -1083,17 +1105,9 @@ function buildSavePayload(src) {
   margin-left: 4px;
 }
 
-.file-status.done {
-  color: #059669;
-}
-
-.file-status.pending {
-  color: #9ca3af;
-}
-
-.file-status.processing {
-  color: #2563eb;
-}
+.file-status.done   { color: #059669; }
+.file-status.pending{ color: #9ca3af; }
+.file-status.processing { color: #2563eb; }
 
 .section-title {
   font-size: 18px;
@@ -1258,6 +1272,13 @@ function buildSavePayload(src) {
   color: #10b981;
 }
 
+.spin-warning {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #ef4444;
+}
+
+/* 상세 모달 헤더 */
 .detail-modal-header {
   padding: 8px 4px 4px;
 }
@@ -1308,6 +1329,7 @@ function buildSavePayload(src) {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .card-saved-badge {
   flex: 0 0 auto;
   padding: 2px 10px;
@@ -1318,10 +1340,5 @@ function buildSavePayload(src) {
   background-color: #ecfdf5;
   border: 1px solid #6ee7b7;
   white-space: nowrap;
-}
-.spin-warning {
-  margin-top: 6px;
-  font-size: 11px;
-  color: #ef4444; /* 살짝 경고 느낌 */
 }
 </style>
