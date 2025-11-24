@@ -17,35 +17,27 @@
               class="form-section"
             >
               <n-form-item label="제품명">
-                <n-input v-model:value="basicForm.chem_name" placeholder="Please Input" />
+                <n-input v-model:value="basicForm.chem_name"  />
               </n-form-item>
 
               <n-form-item label="회사명">
-                <n-input v-model:value="basicForm.vendor_name" placeholder="Please Input" />
+                <n-input v-model:value="basicForm.vendor_name"  />
               </n-form-item>
 
               <n-form-item label="MSDS_NO">
-                <n-input v-model:value="basicForm.msds_no" placeholder="Please Input" />
+                <n-input v-model:value="basicForm.msds_no"  />
               </n-form-item>
 
               <n-form-item label="CAS No.">
-                <n-input v-model:value="basicForm.cas_no" placeholder="예: 64-17-5" />
+                <n-input v-model:value="basicForm.cas_no" />
               </n-form-item>
 
               <n-form-item label="개정일자">
-                <n-date-picker
-                  v-model:value="basicForm.revision_date"
-                  type="date"
-                  placeholder="YYYY-MM-DD"
-                  format="yyyy-MM-dd"
-                  value-format="yyyy-MM-dd"
-                  clearable
-                  style="width: 100%;"
-                />
+                <n-input v-model:value="basicForm.revision_date" />
               </n-form-item>
 
               <n-form-item label="개정번호">
-                <n-input v-model:value="basicForm.version_no" placeholder="Please Input" />
+                <n-input v-model:value="basicForm.version_no"  />
               </n-form-item>
             </n-form>
           </n-tab-pane>
