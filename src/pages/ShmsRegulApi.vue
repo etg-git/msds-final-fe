@@ -53,7 +53,7 @@ import { SearchOutline } from '@vicons/ionicons5'  // ← 돋보기 아이콘
 import ShmsRegulDetailModal from './ShmsRegulDetailModal.vue'
 
 const API_BASE_URL =
-  import.meta.env.VITE_MSDS_API_BASE || 'http://localhost:8000'
+  import.meta.env.VITE_MSDS_BACKEND_URL || 'http://localhost:8000'
 
 const docs = ref([])
 const listLoading = ref(false)

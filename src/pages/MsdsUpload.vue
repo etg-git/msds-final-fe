@@ -1,4 +1,5 @@
 <template>
+  {{ API_BASE }}
   <n-spin :show="globalLoading" size="large">
     <template #description>
       <div class="spin-desc">

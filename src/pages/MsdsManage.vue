@@ -56,7 +56,7 @@ import { PencilOutline, TrashOutline } from '@vicons/ionicons5'
 import MsdsManageDetailDrawer from './MsdsManageDetailDrawer.vue'
 
 const API_BASE_URL =
-  import.meta.env.VITE_MSDS_API_BASE || 'http://localhost:8000'
+  import.meta.env.VITE_MSDS_BACKEND_URL || 'http://localhost:8000'
 
 const docs = ref([])
 const listLoading = ref(false)

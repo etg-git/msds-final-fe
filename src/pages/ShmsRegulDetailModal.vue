@@ -302,7 +302,7 @@ import {
 } from 'naive-ui'
 
 const API_BASE_URL =
-  import.meta.env.VITE_MSDS_API_BASE || 'http://localhost:8000'
+  import.meta.env.VITE_MSDS_BACKEND_URL || 'http://localhost:8000'
 
 const props = defineProps({
   show: {
